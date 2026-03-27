@@ -11,8 +11,8 @@ const getVideo = (num: number) => getAssetUrl(`/videos/${num}.mp4`);
 
 // Organized scenes
 const scene1Videos = [getVideo(1), getVideo(2), getVideo(3)];
-const scene2Videos = [getVideo(4), getVideo(5)];
-const scene3Videos = [6, 7, 8, 9, 10, 11].map(getVideo);
+const scene2Videos = [getAssetUrl('/videos/output.mp4')];
+const scene3Videos = [getAssetUrl('/videos/output3.mp4')];
 
 // Detect mobile once at module level to avoid repeated checks
 const isMobile = (() => {
@@ -24,7 +24,9 @@ const isMobile = (() => {
 
 // How many seconds before the end of a video to trigger the transition.
 const getTransitionBuffer = (videoPath: string): number => {
-  if (videoPath.endsWith('4.mp4') || videoPath.endsWith('5.mp4')) return 0.2;
+  // Trigger transitions earlier for scene 2 clips to avoid visible end-frame stutter.
+  if (videoPath.endsWith('4.mp4')) return 1.1;
+  if (videoPath.endsWith('5.mp4')) return 0.35;
   return 1.0;
 };
 
@@ -36,9 +38,11 @@ interface VideoPlayerProps {
   videoPath: string;
   index: number;
   onAdvance: (index: number) => void;
+  disableAdvance?: boolean;
+  loop?: boolean;
 }
 
-const VideoPlayer = React.memo<VideoPlayerProps>(({ videoPath, index, onAdvance }) => {
+const VideoPlayer = React.memo<VideoPlayerProps>(({ videoPath, index, onAdvance, disableAdvance = false, loop = false }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hasAdvancedRef = useRef(false);
   const rafIdRef = useRef<number>(0);
@@ -66,6 +70,8 @@ const VideoPlayer = React.memo<VideoPlayerProps>(({ videoPath, index, onAdvance 
         });
       });
     }
+
+    if (disableAdvance) return;
 
     // On mobile, use a polling loop via rAF instead of onTimeUpdate.
     // This fires once per frame (~16ms) but we only do a cheap number comparison,
@@ -95,7 +101,7 @@ const VideoPlayer = React.memo<VideoPlayerProps>(({ videoPath, index, onAdvance 
 
   // onTimeUpdate handler — desktop only (lighter for desktop since it's fast enough)
   const handleTimeUpdate = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
-    if (isMobile || hasAdvancedRef.current) return;
+    if (disableAdvance || isMobile || hasAdvancedRef.current) return;
     const video = e.currentTarget;
     if (!video.duration || isNaN(video.duration)) return;
     const remaining = video.duration - video.currentTime;
@@ -104,14 +110,15 @@ const VideoPlayer = React.memo<VideoPlayerProps>(({ videoPath, index, onAdvance 
       hasAdvancedRef.current = true;
       onAdvance(index);
     }
-  }, [videoPath, index, onAdvance]);
+  }, [disableAdvance, videoPath, index, onAdvance]);
 
   const handleEnded = useCallback(() => {
+    if (disableAdvance) return;
     if (!hasAdvancedRef.current) {
       hasAdvancedRef.current = true;
       onAdvance(index);
     }
-  }, [index, onAdvance]);
+  }, [disableAdvance, index, onAdvance]);
 
   const handleError = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
     const video = e.currentTarget;
@@ -132,6 +139,7 @@ const VideoPlayer = React.memo<VideoPlayerProps>(({ videoPath, index, onAdvance 
       autoPlay
       playsInline
       muted
+      loop={loop}
       onTimeUpdate={isMobile ? undefined : handleTimeUpdate}
       onEnded={handleEnded}
       onError={handleError}
@@ -222,6 +230,14 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
   // On mobile: no scale animations (the #1 perf killer for video elements).
   // Time durations are identical to desktop to prevent clip pausing!
   const getVariants = useCallback((videoPath: string): Variants => {
+    if (scene === 3) {
+      return {
+        enter: { opacity: 1, scale: 1 },
+        center: { opacity: 1, scale: 1, transition: { duration: 0 } },
+        exit: { opacity: 1, scale: 1, transition: { duration: 0 } },
+      };
+    }
+
     const isNoZoom =
       videoPath.endsWith('10.mp4') || videoPath.endsWith('4.mp4');
     const isVideo4 = videoPath.endsWith('4.mp4');
@@ -292,6 +308,8 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
                   videoPath={videoPath}
                   index={index}
                   onAdvance={advanceVideo}
+                  disableAdvance={scene === 2 || scene === 3}
+                  loop={scene === 2 || scene === 3}
                 />
               </motion.div>
             );
