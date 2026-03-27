@@ -12,7 +12,7 @@ const getVideo = (num: number) => getAssetUrl(`/videos/${num}.mp4`);
 // Organized scenes
 const scene1Videos = [getVideo(1), getVideo(2), getVideo(3)];
 const scene2Videos = [getAssetUrl('/videos/output.mp4')];
-const scene3Videos = [getAssetUrl('/videos/output3.mp4')];
+const scene3Videos = [6, 7, 8, 9, 10, 11].map(getVideo);
 
 // Detect mobile once at module level to avoid repeated checks
 const isMobile = (() => {
@@ -230,14 +230,6 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
   // On mobile: no scale animations (the #1 perf killer for video elements).
   // Time durations are identical to desktop to prevent clip pausing!
   const getVariants = useCallback((videoPath: string): Variants => {
-    if (scene === 3) {
-      return {
-        enter: { opacity: 1, scale: 1 },
-        center: { opacity: 1, scale: 1, transition: { duration: 0 } },
-        exit: { opacity: 1, scale: 1, transition: { duration: 0 } },
-      };
-    }
-
     const isNoZoom =
       videoPath.endsWith('10.mp4') || videoPath.endsWith('4.mp4');
     const isVideo4 = videoPath.endsWith('4.mp4');
@@ -308,8 +300,8 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
                   videoPath={videoPath}
                   index={index}
                   onAdvance={advanceVideo}
-                  disableAdvance={scene === 2 || scene === 3}
-                  loop={scene === 2 || scene === 3}
+                  disableAdvance={scene === 2}
+                  loop={scene === 2}
                 />
               </motion.div>
             );
