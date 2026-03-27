@@ -1,0 +1,1 @@
+# Keep binary video assets as regular Git files so Vercel serves actual MP4 bytes.

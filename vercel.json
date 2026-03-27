@@ -1,0 +1,35 @@
+{
+  "rewrites": [
+    {
+      "source": "/videos/:id",
+      "destination": "/videos/:id.mp4"
+    },
+    {
+      "source": "/zoom/:path*",
+      "destination": "https://a-dream-a-film-project-frhurlqcb-adev07s-projects.vercel.app/:path*"
+    },
+    {
+      "source": "/fade/:path*",
+      "destination": "https://a-dream-a-film-project-emtinwl70-adev07s-projects.vercel.app/:path*"
+    },
+    {
+      "source": "/smooth/:path*",
+      "destination": "https://a-dream-a-film-project-g3seltppe-adev07s-projects.vercel.app/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/videos/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        },
+        {
+          "key": "Accept-Ranges",
+          "value": "bytes"
+        }
+      ]
+    }
+  ]
+}
