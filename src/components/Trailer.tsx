@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { Maximize, Minimize } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const baseUrl = import.meta.env.BASE_URL || '/';
 const getAssetUrl = (path: string) => `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
@@ -10,7 +11,7 @@ const getVideo = (num: number) => getAssetUrl(`/videos/${num}.mp4`);
 
 // Organized scenes
 const scene1Videos = [getVideo(1), getVideo(2), getVideo(3)];
-const scene2Videos = [getVideo(4), getVideo(5)];
+const scene2Videos = [getAssetUrl('/videos/output.mp4')];
 const scene3Videos = [6, 7, 8, 9, 10, 11].map(getVideo);
 
 // Detect mobile once at module level to avoid repeated checks
@@ -23,7 +24,9 @@ const isMobile = (() => {
 
 // How many seconds before the end of a video to trigger the transition.
 const getTransitionBuffer = (videoPath: string): number => {
-  if (videoPath.endsWith('4.mp4') || videoPath.endsWith('5.mp4')) return 0.2;
+  // Trigger transitions earlier for scene 2 clips to avoid visible end-frame stutter.
+  if (videoPath.endsWith('4.mp4')) return 1.1;
+  if (videoPath.endsWith('5.mp4')) return 0.35;
   return 1.0;
 };
 
@@ -35,9 +38,11 @@ interface VideoPlayerProps {
   videoPath: string;
   index: number;
   onAdvance: (index: number) => void;
+  disableAdvance?: boolean;
+  loop?: boolean;
 }
 
-const VideoPlayer = React.memo<VideoPlayerProps>(({ videoPath, index, onAdvance }) => {
+const VideoPlayer = React.memo<VideoPlayerProps>(({ videoPath, index, onAdvance, disableAdvance = false, loop = false }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hasAdvancedRef = useRef(false);
   const rafIdRef = useRef<number>(0);
@@ -65,6 +70,8 @@ const VideoPlayer = React.memo<VideoPlayerProps>(({ videoPath, index, onAdvance 
         });
       });
     }
+
+    if (disableAdvance) return;
 
     // On mobile, use a polling loop via rAF instead of onTimeUpdate.
     // This fires once per frame (~16ms) but we only do a cheap number comparison,
@@ -94,7 +101,7 @@ const VideoPlayer = React.memo<VideoPlayerProps>(({ videoPath, index, onAdvance 
 
   // onTimeUpdate handler — desktop only (lighter for desktop since it's fast enough)
   const handleTimeUpdate = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
-    if (isMobile || hasAdvancedRef.current) return;
+    if (disableAdvance || isMobile || hasAdvancedRef.current) return;
     const video = e.currentTarget;
     if (!video.duration || isNaN(video.duration)) return;
     const remaining = video.duration - video.currentTime;
@@ -103,14 +110,15 @@ const VideoPlayer = React.memo<VideoPlayerProps>(({ videoPath, index, onAdvance 
       hasAdvancedRef.current = true;
       onAdvance(index);
     }
-  }, [videoPath, index, onAdvance]);
+  }, [disableAdvance, videoPath, index, onAdvance]);
 
   const handleEnded = useCallback(() => {
+    if (disableAdvance) return;
     if (!hasAdvancedRef.current) {
       hasAdvancedRef.current = true;
       onAdvance(index);
     }
-  }, [index, onAdvance]);
+  }, [disableAdvance, index, onAdvance]);
 
   const handleError = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
     const video = e.currentTarget;
@@ -131,6 +139,7 @@ const VideoPlayer = React.memo<VideoPlayerProps>(({ videoPath, index, onAdvance 
       autoPlay
       playsInline
       muted
+      loop={loop}
       onTimeUpdate={isMobile ? undefined : handleTimeUpdate}
       onEnded={handleEnded}
       onError={handleError}
@@ -145,8 +154,12 @@ const VideoPlayer = React.memo<VideoPlayerProps>(({ videoPath, index, onAdvance 
 VideoPlayer.displayName = 'VideoPlayer';
 
 // ─── Main component ──────────────────────────────────────────────────────────
-const CinematicTrailer: React.FC = () => {
-  const [scene, setScene] = useState<1 | 2 | 3>(1);
+interface CinematicTrailerProps {
+  scene?: 1 | 2 | 3;
+}
+
+const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
+  const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -287,6 +300,8 @@ const CinematicTrailer: React.FC = () => {
                   videoPath={videoPath}
                   index={index}
                   onAdvance={advanceVideo}
+                  disableAdvance={scene === 2}
+                  loop={scene === 2}
                 />
               </motion.div>
             );
@@ -344,7 +359,7 @@ const CinematicTrailer: React.FC = () => {
                 <div className="flex flex-col md:flex-row md:justify-between items-center md:items-start w-full relative min-h-[60px] md:min-h-[100px] gap-3 md:gap-0">
                   {/* "Join The Journey" top-left */}
                   <motion.button
-                    onClick={() => setScene(2)}
+                    onClick={() => navigate('/about-the-film')}
                     whileHover={{ scale: 1.05 }}
                     className="text-xl md:text-[26px] font-bold cursor-pointer text-center md:text-left hover:text-white/80 transition-colors relative z-10"
                     style={{ pointerEvents: 'auto' }}
@@ -398,7 +413,7 @@ const CinematicTrailer: React.FC = () => {
                 {/* Top Navigation */}
                 <div className="flex justify-center md:justify-between items-center md:items-start w-full relative min-h-[100px]">
                   <motion.button
-                    onClick={() => setScene(3)}
+                    onClick={() => navigate('/why-this-film')}
                     whileHover={{ scale: 1.05 }}
                     className="text-xl md:text-[22px] font-bold cursor-pointer text-center md:text-left leading-tight hover:text-white/80 transition-colors relative z-10"
                     style={{ pointerEvents: 'auto' }}

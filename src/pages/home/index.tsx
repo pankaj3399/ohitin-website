@@ -1,9 +1,13 @@
 import CinematicTrailer from '../../components/Trailer';
 
-function Home() {
+interface HomeProps {
+  scene?: 1 | 2 | 3;
+}
+
+function Home({ scene = 1 }: HomeProps) {
   return (
     <div className="min-h-screen w-full bg-black">
-      <CinematicTrailer />
+      <CinematicTrailer scene={scene} />
     </div>
   );
 }
