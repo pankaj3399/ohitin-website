@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { Maximize, Minimize } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const baseUrl = import.meta.env.BASE_URL || '/';
 const getAssetUrl = (path: string) => `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
@@ -145,8 +146,12 @@ const VideoPlayer = React.memo<VideoPlayerProps>(({ videoPath, index, onAdvance 
 VideoPlayer.displayName = 'VideoPlayer';
 
 // ─── Main component ──────────────────────────────────────────────────────────
-const CinematicTrailer: React.FC = () => {
-  const [scene, setScene] = useState<1 | 2 | 3>(1);
+interface CinematicTrailerProps {
+  scene?: 1 | 2 | 3;
+}
+
+const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
+  const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -344,7 +349,7 @@ const CinematicTrailer: React.FC = () => {
                 <div className="flex flex-col md:flex-row md:justify-between items-center md:items-start w-full relative min-h-[60px] md:min-h-[100px] gap-3 md:gap-0">
                   {/* "Join The Journey" top-left */}
                   <motion.button
-                    onClick={() => setScene(2)}
+                    onClick={() => navigate('/about-the-film')}
                     whileHover={{ scale: 1.05 }}
                     className="text-xl md:text-[26px] font-bold cursor-pointer text-center md:text-left hover:text-white/80 transition-colors relative z-10"
                     style={{ pointerEvents: 'auto' }}
@@ -398,7 +403,7 @@ const CinematicTrailer: React.FC = () => {
                 {/* Top Navigation */}
                 <div className="flex justify-center md:justify-between items-center md:items-start w-full relative min-h-[100px]">
                   <motion.button
-                    onClick={() => setScene(3)}
+                    onClick={() => navigate('/why-this-film')}
                     whileHover={{ scale: 1.05 }}
                     className="text-xl md:text-[22px] font-bold cursor-pointer text-center md:text-left leading-tight hover:text-white/80 transition-colors relative z-10"
                     style={{ pointerEvents: 'auto' }}
