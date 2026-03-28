@@ -15,6 +15,10 @@
     {
       "source": "/smooth/:path*",
       "destination": "https://a-dream-a-film-project-g3seltppe-adev07s-projects.vercel.app/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
