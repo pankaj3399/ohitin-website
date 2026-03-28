@@ -3,6 +3,9 @@ import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { Maximize, Minimize } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+const FRAMER_CROSSFADE_EASE = [0.42, 0.02, 0.51, 1] as const;
+const FRAMER_CROSSFADE_DURATION = 2;
+
 const baseUrl = import.meta.env.BASE_URL || '/';
 const getAssetUrl = (path: string) => `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
 
@@ -11,7 +14,7 @@ const getVideo = (num: number) => getAssetUrl(`/videos/${num}.mp4`);
 
 // Organized scenes
 const scene1Videos = [getVideo(1), getVideo(2), getVideo(3)];
-const scene2Videos = [getAssetUrl('/videos/output.mp4')];
+const scene2Videos = [getVideo(4), getVideo(5)];
 const scene3Videos = [6, 7, 8, 9, 10, 11].map(getVideo);
 
 // Detect mobile once at module level to avoid repeated checks
@@ -23,11 +26,9 @@ const isMobile = (() => {
 })();
 
 // How many seconds before the end of a video to trigger the transition.
-const getTransitionBuffer = (videoPath: string): number => {
-  // Trigger transitions earlier for scene 2 clips to avoid visible end-frame stutter.
-  if (videoPath.endsWith('4.mp4')) return 1.1;
-  if (videoPath.endsWith('5.mp4')) return 0.35;
-  return 1.0;
+const getTransitionBuffer = (_videoPath: string): number => {
+  // Framer VideoSlideshow uses switchBeforeEnd: 1.5s across scenes.
+  return 1.5;
 };
 
 // ─── Lightweight video player component ───────────────────────────────────────
@@ -227,58 +228,32 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
   }, [scene]);
 
   // ── Cinematic variants ──────────────────────────────────────────────────────
-  // On mobile: no scale animations (the #1 perf killer for video elements).
-  // Time durations are identical to desktop to prevent clip pausing!
-  const getVariants = useCallback((videoPath: string): Variants => {
-    const isNoZoom =
-      videoPath.endsWith('10.mp4') || videoPath.endsWith('4.mp4');
-    const isVideo4 = videoPath.endsWith('4.mp4');
-    const isScene1Video =
-      videoPath.endsWith('1.mp4') ||
-      videoPath.endsWith('2.mp4') ||
-      videoPath.endsWith('3.mp4');
-    const isVideo5 = videoPath.endsWith('5.mp4');
-    const isScene3Video =
-      videoPath.endsWith('6.mp4') ||
-      videoPath.endsWith('7.mp4') ||
-      videoPath.endsWith('8.mp4') ||
-      videoPath.endsWith('9.mp4') ||
-      videoPath.endsWith('10.mp4') ||
-      videoPath.endsWith('11.mp4');
-
-    const enterOpacityDuration = (isScene1Video || isScene3Video) ? 2.5 : isVideo5 ? 1.5 : 1.5;
-    const exitDuration = (isScene1Video || isScene3Video) ? 3.0 : (isVideo4 || isVideo5) ? 2.5 : 1.5;
-
+  const getVariants = useCallback((_videoPath: string): Variants => {
     return {
       enter: {
         opacity: 0,
-        scale: isMobile || isNoZoom ? 1 : 1.05,
       },
       center: {
         zIndex: 1,
         opacity: 1,
-        scale: 1,
         transition: {
-          opacity: { duration: enterOpacityDuration, ease: 'easeOut' as const },
-          scale: isMobile || isNoZoom ? {} : { duration: 10, ease: 'linear' as const },
+          duration: FRAMER_CROSSFADE_DURATION,
+          ease: FRAMER_CROSSFADE_EASE,
         },
       },
       exit: {
         zIndex: 0,
         opacity: 0,
-        scale: isMobile || isNoZoom ? 1 : 0.98,
         transition: {
-          opacity: { duration: exitDuration, ease: 'easeInOut' as const },
-          scale: isMobile || isNoZoom
-            ? {}
-            : { duration: exitDuration, ease: 'easeIn' as const },
+          duration: FRAMER_CROSSFADE_DURATION,
+          ease: FRAMER_CROSSFADE_EASE,
         },
       },
     };
   }, []);
 
   // Memoize scene overlay transition duration
-  const sceneTransitionDuration = 1.5;
+  const sceneTransitionDuration = FRAMER_CROSSFADE_DURATION;
 
   return (
     <div className={`bg-black text-white font-normal select-none transition-all duration-500 ${isFullscreen ? 'fixed inset-0 z-[100] w-screen h-[100dvh] portrait:w-[100dvh] portrait:h-[100vw] portrait:origin-top-left portrait:translate-x-[100vw] portrait:rotate-90 overflow-hidden block' : 'relative w-full h-[100dvh] md:h-screen overflow-x-hidden md:overflow-hidden flex flex-col md:block'}`}>
@@ -300,8 +275,8 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
                   videoPath={videoPath}
                   index={index}
                   onAdvance={advanceVideo}
-                  disableAdvance={scene === 2}
-                  loop={scene === 2}
+                  disableAdvance={false}
+                  loop={true}
                 />
               </motion.div>
             );
@@ -344,7 +319,7 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
 
       {/* Overlays Scene Manager */}
       {!isFullscreen && (
-        <div className="relative w-full flex-1 flex flex-col z-20 overflow-y-auto md:overflow-hidden custom-scrollbar transition-all duration-300 md:absolute md:inset-0 bg-black md:bg-transparent">
+        <div className="relative w-full flex-1 flex flex-col z-20 overflow-y-auto md:overflow-hidden custom-scrollbar smooth-scroll transition-all duration-300 md:absolute md:inset-0 bg-black md:bg-transparent">
           <AnimatePresence mode="wait">
             {scene === 1 && (
               <motion.div
@@ -352,7 +327,7 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: sceneTransitionDuration }}
+                transition={{ duration: sceneTransitionDuration, ease: FRAMER_CROSSFADE_EASE }}
                 className="flex flex-col px-4 py-5 md:p-12 lg:p-16 w-full grow md:absolute md:inset-0 z-20 shrink-0"
               >
                 {/* Top Navigation */}
@@ -407,7 +382,7 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: sceneTransitionDuration }}
+                transition={{ duration: sceneTransitionDuration, ease: FRAMER_CROSSFADE_EASE }}
                 className="flex flex-col px-4 py-5 md:p-12 lg:p-16 w-full grow md:absolute md:inset-0 z-20 shrink-0"
               >
                 {/* Top Navigation */}
@@ -442,7 +417,7 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: sceneTransitionDuration }}
+                transition={{ duration: sceneTransitionDuration, ease: FRAMER_CROSSFADE_EASE }}
                 className="flex flex-col px-4 py-5 md:p-12 lg:p-16 w-full grow md:absolute md:inset-0 z-20 shrink-0"
               >
                 {/* Top Navigation */}
