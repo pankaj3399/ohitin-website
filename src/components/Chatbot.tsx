@@ -4,7 +4,7 @@ import { Send, Trash2Icon, X } from 'lucide-react';
 import avatarImage from '../assets/avatar.jpeg';
 
 const CONVERSATION_API_BASE =
-  import.meta.env.VITE_CONVERSATION_API_BASE || 'http://localhost:4000';
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 const ANONYMOUS_CLIENT_ID_STORAGE_KEY = 'chatbot_anonymous_client_id';
 const CHATBOT_STORAGE_KEY = 'chatbot_conversation_state';
 const MIN_REPLY_DELAY_MS = 45_000;
