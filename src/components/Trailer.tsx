@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { Maximize, Minimize } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Chatbot from './Chatbot';
 
 const FRAMER_CROSSFADE_EASE = [0.42, 0.02, 0.51, 1] as const;
 const FRAMER_CROSSFADE_DURATION = 2;
@@ -30,6 +31,7 @@ const getTransitionBuffer = (_videoPath: string): number => {
   // Framer VideoSlideshow uses switchBeforeEnd: 1.5s across scenes.
   return 1.5;
 };
+
 
 // ─── Lightweight video player component ───────────────────────────────────────
 // Isolates video playback and time-checking from the parent's render cycle.
@@ -457,6 +459,8 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
           </AnimatePresence>
         </div>
       )}
+
+      <Chatbot isFullscreen={isFullscreen} />
     </div>
   );
 };
