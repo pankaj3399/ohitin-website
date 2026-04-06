@@ -25,6 +25,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { admin, logout } = useAdminAuth();
   const location = useLocation();
+  const adminLabel = admin?.username?.trim() || 'Administrator';
+  const adminInitial = adminLabel[0]?.toUpperCase() || 'A';
 
   return (
     <div className="admin-font min-h-screen text-slate-200" style={{ background: '#0B0F14' }}>
@@ -144,10 +146,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   border: '1px solid rgba(255,255,255,0.08)',
                 }}
               >
-                {admin?.email?.[0].toUpperCase() || 'A'}
+                {adminInitial}
               </div>
               <div className="min-w-0">
-                <p className="truncate text-[13px] font-semibold text-white">{admin?.email}</p>
+                <p className="truncate text-[13px] font-semibold text-white">{adminLabel}</p>
                 <p className="text-[10px] font-medium text-slate-500">Administrator</p>
               </div>
             </div>
