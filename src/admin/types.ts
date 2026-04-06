@@ -1,4 +1,4 @@
-export const ADMIN_API_BASE_URL = 'https://ohitin-server.vercel.app/api';
+export const ADMIN_API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
 export const ADMIN_TOKEN_STORAGE_KEY = 'admin_jwt_token';
 
 export interface AdminUser {
