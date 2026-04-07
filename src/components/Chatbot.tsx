@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { RotateCcw, Send, X } from 'lucide-react';
+import { CheckCheck, Clock, RotateCcw, Send, X } from 'lucide-react';
 import avatarImage from '../assets/avatar.jpeg';
 
 const CONVERSATION_API_BASE =
@@ -26,6 +26,7 @@ interface ChatMessage {
   sender: ChatSender;
   text: string;
   status?: 'sending' | 'sent' | 'failed';
+  timestamp: number;
 }
 
 interface ConversationSnapshot {
@@ -45,6 +46,23 @@ interface StoredChatbotState {
   messages: ChatMessage[];
   quickReplies: string[];
 }
+
+const formatMessageTime = (timestamp: number) =>
+  new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+const isFirstInGroup = (messages: ChatMessage[], index: number): boolean => {
+  if (index === 0) return true;
+  const prev = messages[index - 1];
+  const curr = messages[index];
+  return prev.sender !== curr.sender || curr.timestamp - prev.timestamp > 120_000;
+};
+
+const isLastInGroup = (messages: ChatMessage[], index: number): boolean => {
+  if (index === messages.length - 1) return true;
+  const curr = messages[index];
+  const next = messages[index + 1];
+  return curr.sender !== next.sender || next.timestamp - curr.timestamp > 120_000;
+};
 
 const createAnonymousClientId = () => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -99,6 +117,7 @@ const normalizeMessages = (value: unknown): ChatMessage[] => {
         sender: record.sender,
         text: record.text.trim(),
         status,
+        timestamp: typeof record.timestamp === 'number' ? record.timestamp : Date.now(),
       },
     ];
   });
@@ -290,7 +309,9 @@ const extractConversationMessages = (payload: unknown): ChatMessage[] => {
   const conversation = record.conversation as Record<string, unknown>;
   if (!Array.isArray(conversation.messages)) return [];
 
-  return conversation.messages.flatMap((message, index) => {
+  const messageCount = (conversation.messages as unknown[]).length;
+  const now = Date.now();
+  return (conversation.messages as unknown[]).flatMap((message, index) => {
     if (!message || typeof message !== 'object') return [];
     const entry = message as Record<string, unknown>;
     if (entry.sender !== 'assistant' && entry.sender !== 'user') return [];
@@ -301,7 +322,8 @@ const extractConversationMessages = (payload: unknown): ChatMessage[] => {
         id: `conversation-${entry.sender}-${index}`,
         sender: entry.sender,
         text: entry.text.trim(),
-        status: 'sent',
+        status: 'sent' as const,
+        timestamp: now - (messageCount - index) * 1000,
       },
     ];
   });
@@ -348,9 +370,16 @@ const Chatbot: React.FC<ChatbotProps> = ({ isFullscreen }) => {
   const [isSending, setIsSending] = useState(false);
   const [isWaitingForReply, setIsWaitingForReply] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const timerRefs = useRef<number[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isOpenRef = useRef(isOpen);
+
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -360,8 +389,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isFullscreen }) => {
   }, [inputValue]);
 
   useEffect(() => {
-    if (!scrollRef.current) return;
-    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isWaitingForReply]);
 
   useEffect(() => {
@@ -391,6 +419,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isFullscreen }) => {
     setIsSending(false);
     setIsWaitingForReply(false);
     setErrorText(null);
+    setUnreadCount(0);
     clearStoredChatState();
   }, []);
 
@@ -446,6 +475,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isFullscreen }) => {
                       ? backendGreeting.trim()
                       : DEFAULT_GREETING,
                   status: 'sent',
+                  timestamp: Date.now(),
                 },
               ]
       );
@@ -462,34 +492,40 @@ const Chatbot: React.FC<ChatbotProps> = ({ isFullscreen }) => {
 
   const deliverAssistantReply = useCallback(
     (text: string, delayMs: number, options?: { closeAfterReply?: boolean }) => {
-    const timerId = window.setTimeout(() => {
-      setMessages((current) => [
-        ...current,
-        {
-          id: `assistant-${Date.now()}`,
-          sender: 'assistant',
-          text,
-          status: 'sent',
-        },
-      ]);
-      if (options?.closeAfterReply) {
-        setConversation((current) => ({
+      const timerId = window.setTimeout(() => {
+        setMessages((current) => [
           ...current,
-          isComplete: true,
-        }));
-      }
-      setIsWaitingForReply(false);
-      timerRefs.current = timerRefs.current.filter((id) => id !== timerId);
-    }, delayMs);
+          {
+            id: `assistant-${Date.now()}`,
+            sender: 'assistant',
+            text,
+            status: 'sent',
+            timestamp: Date.now(),
+          },
+        ]);
+        if (!isOpenRef.current) {
+          setUnreadCount((n) => n + 1);
+        }
+        if (options?.closeAfterReply) {
+          setConversation((current) => ({
+            ...current,
+            isComplete: true,
+          }));
+        }
+        setIsWaitingForReply(false);
+        timerRefs.current = timerRefs.current.filter((id) => id !== timerId);
+      }, delayMs);
 
-    timerRefs.current.push(timerId);
-    setIsWaitingForReply(true);
+      timerRefs.current.push(timerId);
+      setIsWaitingForReply(true);
     },
     []
   );
 
   const openWidget = useCallback(async () => {
     setIsOpen(true);
+    setUnreadCount(0);
+    window.setTimeout(() => textareaRef.current?.focus(), 350);
     if (!conversationId && messages.length === 0 && !isStarting) {
       try {
         await ensureConversation();
@@ -515,6 +551,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isFullscreen }) => {
           sender: 'user',
           text,
           status: 'sending',
+          timestamp: Date.now(),
         },
       ]);
       setIsSending(true);
@@ -602,6 +639,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isFullscreen }) => {
   );
 
   const isClosed = !!conversation.isComplete;
+  const canSend = !!inputValue.trim() && !isClosed && !isSending;
 
   return (
     <div
@@ -618,17 +656,17 @@ const Chatbot: React.FC<ChatbotProps> = ({ isFullscreen }) => {
             exit={{ opacity: 0, y: 16, scale: 0.95, filter: 'blur(10px)' }}
             transition={CHAT_SPRING}
             style={{ originX: 1, originY: 1 }}
-            className="pointer-events-auto flex h-[min(42rem,calc(100vh-6rem))] w-[calc(100vw-2.5rem)] max-w-[26rem] flex-col overflow-hidden rounded-3xl border border-white/[0.08] bg-[#0a0a0a]/90 shadow-[0_32px_80px_-12px_rgba(0,0,0,0.8),0_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl"
+            className="pointer-events-auto flex h-[min(42rem,calc(100vh-6rem))] w-[calc(100vw-2.5rem)] max-w-[26rem] flex-col overflow-hidden rounded-3xl border border-white/[0.08] bg-[#0a0a0a]/95 shadow-[0_32px_80px_-12px_rgba(0,0,0,0.85),0_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl"
           >
-            {/* ── Ambient glow layer ── */}
+            {/* ── Ambient glow ── */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 rounded-3xl bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.08),transparent_50%),radial-gradient(ellipse_at_bottom_left,rgba(212,175,55,0.10),transparent_50%)]"
+              className="pointer-events-none absolute inset-0 rounded-3xl bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.07),transparent_50%),radial-gradient(ellipse_at_bottom_left,rgba(212,175,55,0.09),transparent_50%)]"
             />
 
             <div className="relative flex h-full flex-col">
               {/* ── Header ── */}
-              <div className="flex items-center justify-between px-5 py-4">
+              <div className="flex items-center justify-between px-5 py-3.5">
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <img
@@ -642,22 +680,23 @@ const Chatbot: React.FC<ChatbotProps> = ({ isFullscreen }) => {
                     <p className="text-[0.8125rem] font-semibold tracking-[-0.01em] text-white/95">
                       AI-GENT 001
                     </p>
-                    <p className="mt-0.5 text-[0.6875rem] font-medium tracking-wide text-white/40">
-                      Personal assistant
+                    <p className="mt-0.5 flex items-center gap-1.5 text-[0.6rem] font-medium text-emerald-400/70">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400/70" />
+                      Online
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-0.5">
                   <button
                     onClick={resetChat}
-                    className="rounded-xl p-2 text-white/40 transition-all duration-200 hover:bg-white/[0.06] hover:text-white/70"
+                    className="rounded-xl p-2 text-white/35 transition-all duration-200 hover:bg-white/[0.06] hover:text-white/70"
                     aria-label="New conversation"
                   >
                     <RotateCcw size={14} strokeWidth={1.75} />
                   </button>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="rounded-xl p-2 text-white/40 transition-all duration-200 hover:bg-white/[0.06] hover:text-white/70"
+                    className="rounded-xl p-2 text-white/35 transition-all duration-200 hover:bg-white/[0.06] hover:text-white/70"
                     aria-label="Close chat"
                   >
                     <X size={16} strokeWidth={1.5} />
@@ -665,33 +704,98 @@ const Chatbot: React.FC<ChatbotProps> = ({ isFullscreen }) => {
                 </div>
               </div>
 
-              {/* ── Subtle header divider ── */}
+              {/* ── Header divider ── */}
               <div className="mx-5 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
 
               {/* ── Messages ── */}
               <div
                 ref={scrollRef}
-                className="chatbot-thin-scrollbar flex-1 space-y-4 overflow-y-auto px-5 py-5"
+                className="chatbot-thin-scrollbar flex-1 overflow-y-auto px-4 pb-3 pt-4"
               >
-                {messages.map((message) => {
+                {messages.map((message, index) => {
                   const isAssistant = message.sender === 'assistant';
                   const isFailed = message.status === 'failed';
+                  const first = isFirstInGroup(messages, index);
+                  const last = isLastInGroup(messages, index);
 
                   return (
                     <motion.div
                       key={message.id}
                       initial={{ opacity: 0, y: 8, scale: 0.97 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
-                      transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-                      className={`w-fit max-w-[80%] text-[0.8125rem] leading-[1.65] ${
-                        isAssistant
-                          ? 'rounded-2xl rounded-tl-md bg-white/[0.06] px-4 py-3 text-white/90'
-                          : isFailed
-                            ? 'ml-auto rounded-2xl rounded-tr-md border border-red-500/20 bg-red-500/[0.07] px-4 py-3 text-red-200/80'
-                            : 'ml-auto rounded-2xl rounded-tr-md border border-amber-500/[0.12] bg-amber-900/40 px-4 py-3 text-white/95'
-                      }`}
+                      transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
+                      className={`flex items-end gap-2 ${isAssistant ? '' : 'justify-end'} ${first ? 'mt-4' : 'mt-0.5'}`}
                     >
-                      {message.text}
+                      {/* Bot avatar — space reserved, shown only on last in group */}
+                      {isAssistant && (
+                        <div className="mb-0.5 w-6 flex-shrink-0">
+                          {last && (
+                            <img
+                              src={avatarImage}
+                              alt=""
+                              className="h-6 w-6 rounded-full object-cover ring-1 ring-white/[0.12]"
+                            />
+                          )}
+                        </div>
+                      )}
+
+                      <div className={`flex max-w-[78%] flex-col ${isAssistant ? 'items-start' : 'items-end'}`}>
+                        <div
+                          className={`px-3.5 py-2.5 text-[0.8125rem] leading-[1.6] ${
+                            isAssistant
+                              ? `bg-white/[0.07] text-white/90 ${
+                                  first && last
+                                    ? 'rounded-2xl rounded-tl-md'
+                                    : first
+                                      ? 'rounded-2xl rounded-tl-md rounded-bl-md'
+                                      : last
+                                        ? 'rounded-2xl rounded-tl-sm rounded-bl-md'
+                                        : 'rounded-2xl rounded-l-md'
+                                }`
+                              : isFailed
+                                ? `border border-red-500/20 bg-red-500/10 text-red-200/80 ${
+                                    first && last
+                                      ? 'rounded-2xl rounded-tr-md'
+                                      : first
+                                        ? 'rounded-2xl rounded-tr-md rounded-br-md'
+                                        : last
+                                          ? 'rounded-2xl rounded-tr-sm rounded-br-md'
+                                          : 'rounded-2xl rounded-r-md'
+                                  }`
+                                : `border border-amber-500/[0.15] bg-[#2a1f00]/80 text-white/95 ${
+                                    first && last
+                                      ? 'rounded-2xl rounded-tr-md'
+                                      : first
+                                        ? 'rounded-2xl rounded-tr-md rounded-br-md'
+                                        : last
+                                          ? 'rounded-2xl rounded-tr-sm rounded-br-md'
+                                          : 'rounded-2xl rounded-r-md'
+                                  }`
+                          }`}
+                        >
+                          {message.text}
+                        </div>
+
+                        {/* Timestamp + status — only on last message in group */}
+                        {last && (
+                          <div
+                            className={`mt-1 flex items-center gap-1 px-1 text-[0.6rem] text-white/25 ${
+                              isAssistant ? '' : 'flex-row-reverse'
+                            }`}
+                          >
+                            <span>{formatMessageTime(message.timestamp)}</span>
+                            {!isAssistant && (
+                              message.status === 'sending' ? (
+                                <Clock size={9} className="opacity-50" />
+                              ) : message.status === 'sent' ? (
+                                <CheckCheck size={11} className="text-white/30" />
+                              ) : message.status === 'failed' ? (
+                                <span className="text-[0.6rem] font-medium text-red-400/80">!</span>
+                              ) : null
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </motion.div>
                   );
                 })}
@@ -701,13 +805,23 @@ const Chatbot: React.FC<ChatbotProps> = ({ isFullscreen }) => {
                   <motion.div
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="w-fit rounded-2xl rounded-tl-md bg-white/[0.06] px-4 py-3.5"
+                    exit={{ opacity: 0, y: 4 }}
+                    transition={{ duration: 0.2 }}
+                    className="mt-4 flex items-end gap-2"
                   >
-                    <div className="flex items-center gap-1">
-                      <span className="chatbot-typing-dot h-[5px] w-[5px] rounded-full bg-white/50" />
-                      <span className="chatbot-typing-dot h-[5px] w-[5px] rounded-full bg-white/50" />
-                      <span className="chatbot-typing-dot h-[5px] w-[5px] rounded-full bg-white/50" />
+                    <div className="w-6 flex-shrink-0">
+                      <img
+                        src={avatarImage}
+                        alt=""
+                        className="h-6 w-6 rounded-full object-cover ring-1 ring-white/[0.12]"
+                      />
+                    </div>
+                    <div className="rounded-2xl rounded-tl-md bg-white/[0.07] px-4 py-3.5">
+                      <div className="flex items-center gap-1">
+                        <span className="chatbot-typing-dot h-[5px] w-[5px] rounded-full bg-white/50" />
+                        <span className="chatbot-typing-dot h-[5px] w-[5px] rounded-full bg-white/50" />
+                        <span className="chatbot-typing-dot h-[5px] w-[5px] rounded-full bg-white/50" />
+                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -717,21 +831,24 @@ const Chatbot: React.FC<ChatbotProps> = ({ isFullscreen }) => {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="rounded-xl border border-red-500/15 bg-red-500/[0.06] px-4 py-3 text-[0.8125rem] leading-relaxed text-red-200/70"
+                    className="mt-3 rounded-xl border border-red-500/15 bg-red-500/[0.06] px-4 py-3 text-[0.75rem] leading-relaxed text-red-200/70"
                   >
                     {errorText}
                   </motion.div>
                 )}
+
+                {/* Scroll anchor */}
+                <div ref={messagesEndRef} />
               </div>
 
               {/* ── Quick replies ── */}
               {quickReplies.length > 0 && !isClosed && !isWaitingForReply && (
-                <div className="flex flex-wrap gap-1.5 px-5 pb-3">
+                <div className="flex flex-wrap gap-1.5 px-4 pb-2">
                   {quickReplies.map((reply) => (
                     <button
                       key={reply}
                       onClick={() => void sendMessage(reply)}
-                      className="rounded-full border border-white/[0.08] bg-white/[0.04] px-3.5 py-1.5 text-[0.6875rem] font-medium text-white/70 transition-all duration-200 hover:border-white/[0.14] hover:bg-white/[0.08] hover:text-white/90"
+                      className="rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-[0.6875rem] font-medium text-white/65 transition-all duration-200 hover:border-amber-500/20 hover:bg-amber-500/[0.06] hover:text-white/90"
                     >
                       {reply}
                     </button>
@@ -740,7 +857,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isFullscreen }) => {
               )}
 
               {/* ── Input area ── */}
-              <div className="px-4 pb-4 pt-2">
+              <div className="px-3 pb-3 pt-1.5">
                 <form
                   onSubmit={(event) => {
                     event.preventDefault();
@@ -755,26 +872,32 @@ const Chatbot: React.FC<ChatbotProps> = ({ isFullscreen }) => {
                       onKeyDown={(event) => {
                         if (event.key === 'Enter' && !event.shiftKey) {
                           event.preventDefault();
-                          if (inputValue.trim() && !isClosed && !isSending) {
+                          if (canSend) {
                             void sendMessage(inputValue);
                           }
                         }
                       }}
                       placeholder={
-                        isClosed ? 'This conversation has ended.' : 'Message AI-GENT 001…'
+                        isClosed ? 'This conversation has ended.' : 'Message…'
                       }
                       disabled={isClosed || isSending}
                       rows={1}
-                      className="chatbot-thin-scrollbar max-h-28 w-full resize-none bg-transparent py-[7px] text-[0.8125rem] leading-normal text-white/90 outline-none placeholder:text-white/25"
+                      className="chatbot-thin-scrollbar max-h-28 w-full resize-none bg-transparent py-[7px] text-[0.8125rem] leading-normal text-white/90 outline-none placeholder:text-white/20"
                     />
-                    <button
+                    <motion.button
                       type="submit"
-                      disabled={!inputValue.trim() || isClosed || isSending}
-                      className="chatbot-send-btn flex-shrink-0 rounded-xl p-[7px] text-white/30 transition-all duration-200 hover:bg-white/[0.06] hover:text-white/70 disabled:pointer-events-none disabled:opacity-30"
+                      disabled={!canSend}
+                      animate={canSend ? { scale: 1 } : { scale: 0.88 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                      className={`chatbot-send-btn flex-shrink-0 rounded-xl p-[7px] transition-all duration-200 disabled:pointer-events-none disabled:opacity-30 ${
+                        canSend
+                          ? 'bg-amber-500/15 text-amber-400/90 hover:bg-amber-500/25'
+                          : 'text-white/25'
+                      }`}
                       aria-label="Send message"
                     >
                       <Send size={15} strokeWidth={1.75} />
-                    </button>
+                    </motion.button>
                   </div>
                 </form>
               </div>
@@ -782,7 +905,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isFullscreen }) => {
           </motion.div>
         )}
 
-        {/* ── Closed FAB ── */}
+        {/* ── FAB ── */}
         {!isOpen && (
           <motion.button
             initial={{ opacity: 0, y: 16, scale: 0.92 }}
@@ -807,11 +930,27 @@ const Chatbot: React.FC<ChatbotProps> = ({ isFullscreen }) => {
               transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
               className="absolute inset-0.5 rounded-full border border-white/[0.06]"
             />
-            <img
-              src={avatarImage}
-              alt="AI-GENT 001"
-              className="relative h-12 w-12 rounded-full object-cover ring-1 ring-white/10"
-            />
+            <div className="relative">
+              <img
+                src={avatarImage}
+                alt="AI-GENT 001"
+                className="relative h-12 w-12 rounded-full object-cover ring-1 ring-white/10"
+              />
+              {/* Unread badge */}
+              <AnimatePresence>
+                {unreadCount > 0 && (
+                  <motion.span
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                    className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-amber-400 px-1 text-[0.5625rem] font-bold leading-none text-black"
+                  >
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </div>
             <div className="relative pr-2">
               <p className="text-[0.8125rem] font-semibold tracking-[-0.01em] leading-none">
                 AI-GENT 001
