@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Send, Trash2Icon, X } from 'lucide-react';
+import { RotateCcw, Send, X } from 'lucide-react';
 import avatarImage from '../assets/avatar.jpeg';
 
 const CONVERSATION_API_BASE =
@@ -350,6 +350,14 @@ const Chatbot: React.FC<ChatbotProps> = ({ isFullscreen }) => {
   const [errorText, setErrorText] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const timerRefs = useRef<number[]>([]);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [inputValue]);
 
   useEffect(() => {
     if (!scrollRef.current) return;
@@ -597,7 +605,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ isFullscreen }) => {
 
   return (
     <div
-      className={`chatbot-ui-font fixed bottom-4 right-4 z-[90] flex flex-col items-end gap-3 ${
+      className={`chatbot-ui-font fixed bottom-5 right-5 z-[90] flex flex-col items-end gap-4 ${
         isFullscreen ? 'pointer-events-none opacity-0' : ''
       }`}
     >
@@ -605,128 +613,125 @@ const Chatbot: React.FC<ChatbotProps> = ({ isFullscreen }) => {
         {isOpen && (
           <motion.div
             layout
-            initial={{ opacity: 0, y: 28, scale: 0.9, filter: 'blur(10px)' }}
+            initial={{ opacity: 0, y: 24, scale: 0.92, filter: 'blur(12px)' }}
             animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, y: 18, scale: 0.94, filter: 'blur(8px)' }}
+            exit={{ opacity: 0, y: 16, scale: 0.95, filter: 'blur(10px)' }}
             transition={CHAT_SPRING}
             style={{ originX: 1, originY: 1 }}
-            className="pointer-events-auto flex h-[42rem] w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-[28px] border border-white/15 bg-black/80 shadow-2xl backdrop-blur-xl"
+            className="pointer-events-auto flex h-[min(42rem,calc(100vh-6rem))] w-[calc(100vw-2.5rem)] max-w-[26rem] flex-col overflow-hidden rounded-3xl border border-white/[0.08] bg-[#0a0a0a]/90 shadow-[0_32px_80px_-12px_rgba(0,0,0,0.8),0_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-2xl"
           >
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(212,175,55,0.18),transparent_36%)]"
+            {/* ── Ambient glow layer ── */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 rounded-3xl bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.08),transparent_50%),radial-gradient(ellipse_at_bottom_left,rgba(212,175,55,0.10),transparent_50%)]"
             />
+
             <div className="relative flex h-full flex-col">
-              <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+              {/* ── Header ── */}
+              <div className="flex items-center justify-between px-5 py-4">
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <img
                       src={avatarImage}
                       alt="AI-GENT 001"
-                      className="h-10 w-10 rounded-full object-cover ring-1 ring-white/15"
+                      className="h-9 w-9 rounded-full object-cover ring-1 ring-white/10"
                     />
-                    <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border border-black bg-emerald-400" />
+                    <span className="absolute -bottom-px -right-px h-2.5 w-2.5 rounded-full border-[1.5px] border-[#0a0a0a] bg-emerald-400" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-white">AI-GENT 001</p>
-                    <p className="text-xs text-white/60">Personal assistant to Ohitiin</p>
+                    <p className="text-[0.8125rem] font-semibold tracking-[-0.01em] text-white/95">
+                      AI-GENT 001
+                    </p>
+                    <p className="mt-0.5 text-[0.6875rem] font-medium tracking-wide text-white/40">
+                      Personal assistant
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5">
                   <button
                     onClick={resetChat}
-                    className="rounded-full p-2 text-white/70 transition hover:bg-white/10 hover:text-white"
-                    aria-label="Clear chat"
+                    className="rounded-xl p-2 text-white/40 transition-all duration-200 hover:bg-white/[0.06] hover:text-white/70"
+                    aria-label="New conversation"
                   >
-                    <Trash2Icon size={16} />
+                    <RotateCcw size={14} strokeWidth={1.75} />
                   </button>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="rounded-full p-2 text-white/70 transition hover:bg-white/10 hover:text-white"
+                    className="rounded-xl p-2 text-white/40 transition-all duration-200 hover:bg-white/[0.06] hover:text-white/70"
                     aria-label="Close chat"
                   >
-                    <X size={18} />
+                    <X size={16} strokeWidth={1.5} />
                   </button>
                 </div>
               </div>
 
+              {/* ── Subtle header divider ── */}
+              <div className="mx-5 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+
+              {/* ── Messages ── */}
               <div
                 ref={scrollRef}
-                className="chatbot-thin-scrollbar flex-1 space-y-3 overflow-y-auto px-4 py-4"
+                className="chatbot-thin-scrollbar flex-1 space-y-4 overflow-y-auto px-5 py-5"
               >
-                {messages.map((message) => (
-                  <motion.div
-                    key={message.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.24, ease: 'easeOut' }}
-                    className={`w-fit max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                      message.sender === 'assistant'
-                        ? 'bg-white/10 text-white'
-                        : message.status === 'failed'
-                          ? 'ml-auto border border-red-400/40 bg-red-500/10 text-red-100'
-                          : 'ml-auto bg-white text-black'
-                    }`}
-                    style={{ width: 'fit-content' }}
-                  >
-                    {message.text}
-                  </motion.div>
-                ))}
+                {messages.map((message) => {
+                  const isAssistant = message.sender === 'assistant';
+                  const isFailed = message.status === 'failed';
 
+                  return (
+                    <motion.div
+                      key={message.id}
+                      initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+                      className={`w-fit max-w-[80%] text-[0.8125rem] leading-[1.65] ${
+                        isAssistant
+                          ? 'rounded-2xl rounded-tl-md bg-white/[0.06] px-4 py-3 text-white/90'
+                          : isFailed
+                            ? 'ml-auto rounded-2xl rounded-tr-md border border-red-500/20 bg-red-500/[0.07] px-4 py-3 text-red-200/80'
+                            : 'ml-auto rounded-2xl rounded-tr-md border border-amber-500/[0.12] bg-amber-900/40 px-4 py-3 text-white/95'
+                      }`}
+                    >
+                      {message.text}
+                    </motion.div>
+                  );
+                })}
+
+                {/* ── Typing indicator ── */}
                 {(isStarting || isWaitingForReply) && (
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="w-fit max-w-[85%] rounded-2xl bg-white/10 px-4 py-3 text-sm text-white/80"
-                    style={{ width: 'fit-content' }}
+                    transition={{ duration: 0.25 }}
+                    className="w-fit rounded-2xl rounded-tl-md bg-white/[0.06] px-4 py-3.5"
                   >
-                    <div className="flex items-center gap-1.5 py-1">
-                      <motion.span
-                        className="h-2.5 w-2.5 rounded-full bg-white/70"
-                        animate={{ y: [0, -4, 0], opacity: [0.35, 1, 0.35] }}
-                        transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}
-                      />
-                      <motion.span
-                        className="h-2.5 w-2.5 rounded-full bg-white/70"
-                        animate={{ y: [0, -4, 0], opacity: [0.35, 1, 0.35] }}
-                        transition={{
-                          duration: 0.8,
-                          repeat: Infinity,
-                          ease: 'easeInOut',
-                          delay: 0.12,
-                        }}
-                      />
-                      <motion.span
-                        className="h-2.5 w-2.5 rounded-full bg-white/70"
-                        animate={{ y: [0, -4, 0], opacity: [0.35, 1, 0.35] }}
-                        transition={{
-                          duration: 0.8,
-                          repeat: Infinity,
-                          ease: 'easeInOut',
-                          delay: 0.24,
-                        }}
-                      />
+                    <div className="flex items-center gap-1">
+                      <span className="chatbot-typing-dot h-[5px] w-[5px] rounded-full bg-white/50" />
+                      <span className="chatbot-typing-dot h-[5px] w-[5px] rounded-full bg-white/50" />
+                      <span className="chatbot-typing-dot h-[5px] w-[5px] rounded-full bg-white/50" />
                     </div>
                   </motion.div>
                 )}
 
+                {/* ── Error ── */}
                 {errorText && (
-                  <div className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="rounded-xl border border-red-500/15 bg-red-500/[0.06] px-4 py-3 text-[0.8125rem] leading-relaxed text-red-200/70"
+                  >
                     {errorText}
-                  </div>
+                  </motion.div>
                 )}
               </div>
 
+              {/* ── Quick replies ── */}
               {quickReplies.length > 0 && !isClosed && !isWaitingForReply && (
-                <div className="flex flex-wrap gap-2 px-4 pb-3">
+                <div className="flex flex-wrap gap-1.5 px-5 pb-3">
                   {quickReplies.map((reply) => (
                     <button
                       key={reply}
                       onClick={() => void sendMessage(reply)}
-                      className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white transition hover:bg-white/10"
+                      className="rounded-full border border-white/[0.08] bg-white/[0.04] px-3.5 py-1.5 text-[0.6875rem] font-medium text-white/70 transition-all duration-200 hover:border-white/[0.14] hover:bg-white/[0.08] hover:text-white/90"
                     >
                       {reply}
                     </button>
@@ -734,62 +739,86 @@ const Chatbot: React.FC<ChatbotProps> = ({ isFullscreen }) => {
                 </div>
               )}
 
-              <form
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  void sendMessage(inputValue);
-                }}
-                className="border-t border-white/10 p-3"
-              >
-                <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
-                  <input
-                    value={inputValue}
-                    onChange={(event) => setInputValue(event.target.value)}
-                    placeholder={isClosed ? 'This conversation has ended.' : 'Type your message'}
-                    disabled={isClosed || isSending}
-                    className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/35"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!inputValue.trim() || isClosed || isSending}
-                    className="rounded-full p-2 text-white/80 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
-                    aria-label="Send message"
-                  >
-                    <Send size={16} />
-                  </button>
-                </div>
-              </form>
+              {/* ── Input area ── */}
+              <div className="px-4 pb-4 pt-2">
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void sendMessage(inputValue);
+                  }}
+                >
+                  <div className="chatbot-input-wrap flex items-end gap-1.5 rounded-2xl border border-white/[0.08] bg-white/[0.03] py-1.5 pl-4 pr-1.5">
+                    <textarea
+                      ref={textareaRef}
+                      value={inputValue}
+                      onChange={(event) => setInputValue(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' && !event.shiftKey) {
+                          event.preventDefault();
+                          if (inputValue.trim() && !isClosed && !isSending) {
+                            void sendMessage(inputValue);
+                          }
+                        }
+                      }}
+                      placeholder={
+                        isClosed ? 'This conversation has ended.' : 'Message AI-GENT 001…'
+                      }
+                      disabled={isClosed || isSending}
+                      rows={1}
+                      className="chatbot-thin-scrollbar max-h-28 w-full resize-none bg-transparent py-[7px] text-[0.8125rem] leading-normal text-white/90 outline-none placeholder:text-white/25"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!inputValue.trim() || isClosed || isSending}
+                      className="chatbot-send-btn flex-shrink-0 rounded-xl p-[7px] text-white/30 transition-all duration-200 hover:bg-white/[0.06] hover:text-white/70 disabled:pointer-events-none disabled:opacity-30"
+                      aria-label="Send message"
+                    >
+                      <Send size={15} strokeWidth={1.75} />
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </motion.div>
         )}
 
+        {/* ── Closed FAB ── */}
         {!isOpen && (
           <motion.button
-            initial={{ opacity: 0, y: 18, scale: 0.9 }}
+            initial={{ opacity: 0, y: 16, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.92 }}
+            exit={{ opacity: 0, y: 10, scale: 0.94 }}
             transition={CHAT_SPRING}
             onClick={() => void openWidget()}
-            whileHover={{ y: -4, scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="pointer-events-auto relative flex items-center gap-3 overflow-hidden rounded-full border border-white/15 bg-black/70 px-3 py-3 text-left text-white shadow-xl backdrop-blur-xl transition hover:bg-black/85"
+            whileHover={{ y: -3, scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            className="pointer-events-auto relative flex items-center gap-3 overflow-hidden rounded-full border border-white/[0.08] bg-[#0a0a0a]/80 px-3 py-2.5 text-left text-white shadow-[0_16px_48px_-8px_rgba(0,0,0,0.7)] backdrop-blur-2xl transition-colors duration-300 hover:border-white/[0.12] hover:bg-[#0a0a0a]/90"
             aria-label="Open chat"
           >
-            <span className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.16),transparent_45%,rgba(212,175,55,0.18))]" />
+            {/* Ambient sheen */}
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.06)_0%,transparent_40%,rgba(212,175,55,0.08)_100%)]"
+            />
+            {/* Breathing ring */}
             <motion.span
               aria-hidden="true"
-              animate={{ scale: [1, 1.08, 1], opacity: [0.35, 0.55, 0.35] }}
-              transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute inset-1 rounded-full border border-white/10"
+              animate={{ scale: [1, 1.06, 1], opacity: [0.2, 0.4, 0.2] }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute inset-0.5 rounded-full border border-white/[0.06]"
             />
             <img
               src={avatarImage}
               alt="AI-GENT 001"
-              className="relative h-14 w-14 rounded-full object-cover ring-1 ring-white/20"
+              className="relative h-12 w-12 rounded-full object-cover ring-1 ring-white/10"
             />
             <div className="relative pr-2">
-              <p className="text-sm font-semibold leading-none">AI-GENT 001</p>
-              <p className="mt-1 text-xs text-white/65">How may I help you?</p>
+              <p className="text-[0.8125rem] font-semibold tracking-[-0.01em] leading-none">
+                AI-GENT 001
+              </p>
+              <p className="mt-1 text-[0.6875rem] font-medium text-white/45">
+                How may I help you?
+              </p>
             </div>
           </motion.button>
         )}
