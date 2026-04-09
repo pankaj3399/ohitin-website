@@ -388,11 +388,11 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
                 className="flex flex-col px-4 py-5 md:p-12 lg:p-16 w-full grow md:absolute md:inset-0 z-20 shrink-0"
               >
                 {/* Top Navigation */}
-                <div className="flex justify-center md:justify-between items-center md:items-start w-full relative min-h-[100px]">
+                <div className="flex justify-center md:justify-between items-center md:items-start w-full relative">
                   <motion.button
                     onClick={() => navigate('/why-this-film')}
                     whileHover={{ scale: 1.05 }}
-                    className="text-xl md:text-[22px] font-bold cursor-pointer text-center md:text-left leading-tight hover:text-white/80 transition-colors relative z-10"
+                    className="text-[24px] md:text-[22px] font-bold cursor-pointer text-center md:text-left leading-tight hover:text-white/80 transition-colors relative z-10"
                     style={{ pointerEvents: 'auto' }}
                   >
                     Join The Journey
@@ -402,12 +402,12 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
                 </div>
 
                 {/* Bottom Story Block */}
-                <div className="mt-6 md:mt-auto mx-auto w-full max-w-7xl text-center">
-                  <h2 className="text-3xl md:text-[40px] font-normal mb-6">
+                <div className="mt-4 md:mt-auto mx-auto w-full max-w-7xl text-center pb-20 md:pb-0">
+                  <h2 className="text-2xl md:text-[40px] font-normal mb-3 md:mb-6">
                     About The film A Dream
                   </h2>
                   <p className="text-[17px] md:text-[20px] mx-auto leading-snug font-normal text-white text-justify md:text-center">
-                    A Dream is a story about what remains after everything familiar is taken away. Set in 1991 against the collapse of communism in Albania, it follows Jalin, a teenage girl taken into a foreign country she never chose, with nothing left but a simple dream of one day owning her own coffee shop. As she rebuilds her life through work, human connection, and a profound love that reshapes her understanding of belonging, the film explores how purpose can take root even in the aftermath of loss. It's a story of survival, chance, and the courage to believe in a future shaped by one's own hands—even when time is limited.
+                    A Dream is a story about what remains after everything familiar is taken away. Set in 1991 against the collapse of communism in Albania, it follows Jalin, a teenage girl taken into a foreign country she never chose, with nothing left but a simple dream of one day owning her own coffee shop. As she rebuilds her life through work, human connection, and a profound love that reshapes her understanding of belonging, the film explores how purpose can take root even in the aftermath of loss. <br /> It's a story of survival, chance, and the courage to believe in a future shaped by <br /> one's own hands—even when time is limited.
                   </p>
                 </div>
               </motion.div>
