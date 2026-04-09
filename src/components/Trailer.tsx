@@ -407,7 +407,7 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
                     About The film A Dream
                   </h2>
                   <p className="text-[17px] md:text-[20px] mx-auto leading-snug font-normal text-white text-justify md:text-center">
-                    A Dream is a story about what remains after everything familiar is taken away. Set in 1991 against the collapse of communism in Albania, it follows Jalin, a teenage girl taken into a foreign country she never chose, with nothing left but a simple dream of one day owning her own coffee shop. As she rebuilds her life through work, human connection, and a profound love that reshapes her understanding of belonging, the film explores how purpose can take root even in the aftermath of loss. <br /> It's a story of survival, chance, and the courage to believe in a future shaped by <br /> one's own hands—even when time is limited.
+                    A Dream is a story about what remains after everything familiar is taken away. Set in 1991 against the collapse of communism in Albania, it follows Jalin, a teenage girl taken into a foreign country she never chose, with nothing left but a simple dream of one day owning her own coffee shop. As she rebuilds her life through work, human connection, and a profound love that reshapes her understanding of belonging, the film explores how purpose can take root even in the aftermath of loss. <br className="hidden md:block" /> It's a story of survival, chance, and the courage to believe in a future shaped by <br className="hidden md:block" /> one's own hands—even when time is limited.
                   </p>
                 </div>
               </motion.div>
@@ -451,7 +451,7 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
                     Why This Film
                   </h2>
                   <p className="text-[17px] md:text-[20px] mx-auto leading-snug font-normal text-white text-justify md:text-center">
-                    I decided to write A DREAM after a woman trusted me with a part of her life, in her own words. We met by chance in a coffee shop in Rome, and over time she began to share fragments of a story she wasn't sure she was ready to tell. When she finally asked me to write it, she didn't ask lightly—and I promised I would. This film exists to honor that promise, and to give voice to a life shaped by loss, resilience, love, and an unwavering dream.
+                    I decided to write A DREAM after a woman trusted me with a part of her life, in her own words. We met by chance in a coffee shop in Rome, and over time she began to share fragments of a story she wasn't sure she was ready to tell. When she finally asked me to write it, she didn't ask lightly—and I promised I would. This film exists to honor that promise,<br className="hidden md:block" /> and to  give voice to a life shaped by loss, resilience, love, and an unwavering dream.
                   </p>
                 </div>
               </motion.div>
