@@ -353,7 +353,7 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
                 </div>
 
                 {/* Bottom Credits Block */}
-                <div className="mt-3 md:mt-auto mx-auto w-full max-w-5xl text-center flex flex-col items-center justify-end pb-16 md:pb-2">
+                <div className="mt-3 md:mt-auto mx-auto w-full max-w-5xl text-center flex flex-col items-center justify-end pb-24 md:pb-2">
                   <div className="flex flex-col items-center space-y-0.5 md:space-y-1 mb-3 md:mb-6">
                     <h2 className="text-2xl md:text-[40px] font-normal leading-tight">
                       A Film
@@ -400,7 +400,7 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
                 </div>
 
                 {/* Bottom Story Block */}
-                <div className="mt-3 md:mt-auto mx-auto w-full max-w-7xl text-center pb-16 md:pb-0">
+                <div className="mt-3 md:mt-auto mx-auto w-full max-w-7xl text-center pb-24 md:pb-0">
                   <h2 className="text-2xl md:text-[40px] font-normal mb-2 md:mb-6">
                     About The film A Dream
                   </h2>
@@ -444,7 +444,7 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
                 </div>
 
                 {/* Bottom Story Block */}
-                <div className="mt-3 md:mt-auto mx-auto w-full max-w-7xl text-center pb-16 md:pb-8">
+                <div className="mt-3 md:mt-auto mx-auto w-full max-w-7xl text-center pb-24 md:pb-8">
                   <h2 className="text-2xl md:text-[40px] font-normal mb-2 md:mb-6">
                     Why This Film
                   </h2>
