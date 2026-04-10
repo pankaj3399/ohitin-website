@@ -4,7 +4,6 @@ import {
   PanelLeftClose,
   LayoutDashboard,
   BarChart3,
-  Settings,
   Shield,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -18,7 +17,6 @@ interface DashboardLayoutProps {
 const navItems = [
   { to: '/admin/dashboard', label: 'Overview', icon: LayoutDashboard },
   { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
-  { to: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
