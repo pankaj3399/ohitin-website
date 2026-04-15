@@ -7,6 +7,11 @@ import type {
   AnalyticsFilters,
   AnalyticsListResponse,
   FunnelResponse,
+  InstagramConversation,
+  InstagramConversationListResponse,
+  InstagramFilters,
+  InstagramOverviewMetrics,
+  MetaSettings,
   OverviewResponse,
   TagsResponse,
 } from '../types';
@@ -120,5 +125,83 @@ export async function exportAnalyticsCsv(filters: AnalyticsFilters) {
     responseType: 'blob',
   });
 
+  return response.data;
+}
+
+/* ── Instagram DM Automation API ── */
+
+function buildInstagramParams(filters: InstagramFilters) {
+  return Object.entries(filters).reduce<Record<string, string | number>>(
+    (params, [key, value]) => {
+      if (value !== '' && value !== null && value !== undefined) {
+        params[key] = value;
+      }
+      return params;
+    },
+    {}
+  );
+}
+
+export async function fetchInstagramOverview() {
+  const response = await adminApiClient.get<{ overview: InstagramOverviewMetrics }>(
+    '/admin/instagram/overview'
+  );
+  return response.data.overview;
+}
+
+export async function fetchInstagramConversations(filters: InstagramFilters) {
+  const response = await adminApiClient.get<InstagramConversationListResponse>(
+    '/admin/instagram/conversations',
+    { params: buildInstagramParams(filters) }
+  );
+  return response.data;
+}
+
+export async function fetchInstagramConversation(id: string) {
+  const response = await adminApiClient.get<{ conversation: InstagramConversation }>(
+    `/admin/instagram/conversations/${id}`
+  );
+  return response.data.conversation;
+}
+
+export async function exportInstagramCsv(filters: InstagramFilters) {
+  const response = await adminApiClient.get<Blob>('/admin/instagram/conversations', {
+    params: {
+      ...buildInstagramParams(filters),
+      export: 'csv',
+    },
+    responseType: 'blob',
+  });
+  return response.data;
+}
+
+/* ── Meta Settings API ── */
+
+export async function fetchMetaSettings() {
+  const response = await adminApiClient.get<{ settings: MetaSettings }>(
+    '/admin/settings/meta'
+  );
+  return response.data.settings;
+}
+
+export async function saveMetaSettings(settings: { accessToken: string; verifyToken: string; pageId: string }) {
+  const response = await adminApiClient.post<{ settings: MetaSettings }>(
+    '/admin/settings/meta',
+    settings
+  );
+  return response.data.settings;
+}
+
+export async function disconnectMeta() {
+  const response = await adminApiClient.delete<{ success: boolean }>(
+    '/admin/settings/meta'
+  );
+  return response.data;
+}
+
+export async function testMetaConnection() {
+  const response = await adminApiClient.post<{ connected: boolean; error?: string }>(
+    '/admin/settings/meta/test'
+  );
   return response.data;
 }

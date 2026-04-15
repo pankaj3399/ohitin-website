@@ -5,6 +5,9 @@ import {
   LayoutDashboard,
   BarChart3,
   Shield,
+  MessageCircle,
+  UserCheck,
+  Settings,
 } from 'lucide-react';
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
@@ -14,10 +17,35 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-const navItems = [
-  { to: '/admin/dashboard', label: 'Overview', icon: LayoutDashboard },
-  { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+interface NavSection {
+  heading: string;
+  items: { to: string; label: string; icon: typeof LayoutDashboard }[];
+}
+
+const navSections: NavSection[] = [
+  {
+    heading: 'Navigation',
+    items: [
+      { to: '/admin/dashboard', label: 'Overview', icon: LayoutDashboard },
+      { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+    ],
+  },
+  {
+    heading: 'Instagram AI',
+    items: [
+      { to: '/admin/instagram', label: 'DM Conversations', icon: MessageCircle },
+      { to: '/admin/instagram/leads', label: 'Captured Leads', icon: UserCheck },
+    ],
+  },
+  {
+    heading: 'System',
+    items: [
+      { to: '/admin/settings', label: 'Settings', icon: Settings },
+    ],
+  },
 ];
+
+const navItems = navSections.flatMap((s) => s.items);
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -26,7 +54,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const adminLabel = admin?.username?.trim() || 'Administrator';
   const adminInitial = adminLabel[0]?.toUpperCase() || 'A';
 
-  const currentPage = navItems.find((item) => item.to === location.pathname);
+  const currentPage = navItems.find((item) => location.pathname === item.to);
 
   return (
     <div className="admin-font flex h-screen text-slate-200" style={{ background: '#0B0F14' }}>
@@ -83,49 +111,55 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-1 px-3">
-          <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-600">
-            Navigation
-          </p>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.to;
-            return (
-              <NavLink
-                key={item.label}
-                to={item.to}
-                className={() =>
-                  `group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 ${
-                    isActive
-                      ? 'text-white'
-                      : 'text-slate-500 hover:bg-white/[0.03] hover:text-slate-300'
-                  }`
-                }
-                onClick={() => setIsSidebarOpen(false)}
-                style={() =>
-                  isActive
-                    ? {
-                        background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.12), rgba(99, 102, 241, 0.08))',
-                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
+        <nav className="flex-1 space-y-4 px-3">
+          {navSections.map((section) => (
+            <div key={section.heading}>
+              <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-600">
+                {section.heading}
+              </p>
+              <div className="space-y-1">
+                {section.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname === item.to;
+                  return (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      className={() =>
+                        `group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 ${
+                          isActive
+                            ? 'text-white'
+                            : 'text-slate-500 hover:bg-white/[0.03] hover:text-slate-300'
+                        }`
                       }
-                    : {}
-                }
-              >
-                {/* Left indicator accent */}
-                <div
-                  className={`absolute left-0 h-4 w-[2.5px] rounded-r-full transition-all duration-300 ${
-                    isActive ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0'
-                  }`}
-                  style={{ background: 'linear-gradient(180deg, #3B82F6, #6366F1)' }}
-                />
-                <Icon
-                  size={16}
-                  className={`relative z-10 transition-colors ${isActive ? 'text-blue-400' : 'text-slate-500 group-hover:text-slate-300'}`}
-                />
-                <span className="relative z-10">{item.label}</span>
-              </NavLink>
-            );
-          })}
+                      onClick={() => setIsSidebarOpen(false)}
+                      style={() =>
+                        isActive
+                          ? {
+                              background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.12), rgba(99, 102, 241, 0.08))',
+                              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
+                            }
+                          : {}
+                      }
+                    >
+                      {/* Left indicator accent */}
+                      <div
+                        className={`absolute left-0 h-4 w-[2.5px] rounded-r-full transition-all duration-300 ${
+                          isActive ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0'
+                        }`}
+                        style={{ background: 'linear-gradient(180deg, #3B82F6, #6366F1)' }}
+                      />
+                      <Icon
+                        size={16}
+                        className={`relative z-10 transition-colors ${isActive ? 'text-blue-400' : 'text-slate-500 group-hover:text-slate-300'}`}
+                      />
+                      <span className="relative z-10">{item.label}</span>
+                    </NavLink>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         {/* Sidebar footer — admin info + logout */}
