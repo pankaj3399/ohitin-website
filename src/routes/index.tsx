@@ -12,6 +12,15 @@ const AdminDashboardPage = React.lazy(
 const AdminAnalyticsPage = React.lazy(
   () => import('../admin/pages/AdminAnalyticsPage')
 );
+const InstagramConversationsPage = React.lazy(
+  () => import('../admin/pages/InstagramConversationsPage')
+);
+const InstagramLeadsPage = React.lazy(
+  () => import('../admin/pages/InstagramLeadsPage')
+);
+const AdminSettingsPage = React.lazy(
+  () => import('../admin/pages/AdminSettingsPage')
+);
 
 const ROUTE_TRANSITION = {
   duration: 0.8,
@@ -43,6 +52,9 @@ function AnimatedRoutes() {
         <Route element={<ProtectedAdminRoute />}>
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
+          <Route path="/admin/instagram" element={<InstagramConversationsPage />} />
+          <Route path="/admin/instagram/leads" element={<InstagramLeadsPage />} />
+          <Route path="/admin/settings" element={<AdminSettingsPage />} />
         </Route>
       </Routes>
     </AnimatePresence>
