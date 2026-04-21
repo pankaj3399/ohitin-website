@@ -28,7 +28,6 @@ import {
   Mail,
   Phone,
   SlidersHorizontal,
-  Users,
   CheckCircle2,
   Zap,
 } from 'lucide-react';
