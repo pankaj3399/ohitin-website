@@ -21,6 +21,7 @@ const InstagramLeadsPage = React.lazy(
 const AdminSettingsPage = React.lazy(
   () => import('../admin/pages/AdminSettingsPage')
 );
+const PrivacyPolicyPage = React.lazy(() => import('../pages/privacy'));
 
 const ROUTE_TRANSITION = {
   duration: 0.8,
@@ -48,6 +49,7 @@ function AnimatedRoutes() {
         <Route path="/" element={renderScene(1)} />
         <Route path="/about-the-film" element={renderScene(2)} />
         <Route path="/why-this-film" element={renderScene(3)} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route element={<ProtectedAdminRoute />}>
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
