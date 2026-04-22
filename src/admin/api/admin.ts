@@ -142,11 +142,24 @@ function buildInstagramParams(filters: InstagramFilters) {
   );
 }
 
-export async function fetchInstagramOverview() {
-  const response = await adminApiClient.get<{ overview: InstagramOverviewMetrics }>(
-    '/admin/instagram/overview'
-  );
-  return response.data.overview;
+export async function fetchInstagramOverview(): Promise<InstagramOverviewMetrics> {
+  const response = await adminApiClient.get<{
+    overview: {
+      total?: number;
+      active?: number;
+      completed?: number;
+      emailsCollected?: number;
+      phonesCollected?: number;
+    };
+  }>('/admin/instagram/overview');
+  const o = response.data.overview ?? {};
+  return {
+    totalConversations: o.total ?? 0,
+    activeConversations: o.active ?? 0,
+    completedConversations: o.completed ?? 0,
+    emailsCaptured: o.emailsCollected ?? 0,
+    phonesCaptured: o.phonesCollected ?? 0,
+  };
 }
 
 export async function fetchInstagramConversations(filters: InstagramFilters) {
