@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, Database, Download, Inbox, SlidersHorizontal } from 'lucide-react';
 import type { AnalyticsRow, PaginationMeta } from '../types';
 import { formatDate } from '../utils/format';
+import { defaultTagColor, getDistinctiveTags, tagColorMap } from '../utils/tags';
 
 interface AnalyticsTableProps {
   rows: AnalyticsRow[];
@@ -12,18 +13,6 @@ interface AnalyticsTableProps {
   onExport: () => Promise<void>;
   isExporting: boolean;
 }
-
-/* ── Tag color map ── */
-const tagColorMap: Record<string, { bg: string; text: string; border: string }> = {
-  INVESTOR: { bg: 'rgba(139,92,246,0.12)', text: '#C4B5FD', border: 'rgba(139,92,246,0.2)' },
-  CREATIVE: { bg: 'rgba(59,130,246,0.12)', text: '#93C5FD', border: 'rgba(59,130,246,0.2)' },
-  GENERAL: { bg: 'rgba(100,116,139,0.12)', text: '#94A3B8', border: 'rgba(100,116,139,0.2)' },
-  VIP: { bg: 'rgba(245,158,11,0.12)', text: '#FCD34D', border: 'rgba(245,158,11,0.2)' },
-  TALENT: { bg: 'rgba(236,72,153,0.12)', text: '#F9A8D4', border: 'rgba(236,72,153,0.2)' },
-  BRAND: { bg: 'rgba(16,185,129,0.12)', text: '#6EE7B7', border: 'rgba(16,185,129,0.2)' },
-};
-
-const defaultTagColor = { bg: 'rgba(100,116,139,0.1)', text: '#94A3B8', border: 'rgba(100,116,139,0.15)' };
 
 function getTagColor(tag: string) {
   return tagColorMap[tag.toUpperCase()] || defaultTagColor;
@@ -286,26 +275,35 @@ export function AnalyticsTable({
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="flex max-w-[180px] flex-wrap gap-1">
-                        {row.tags.length ? (
-                          row.tags.map((tag) => {
-                            const color = getTagColor(tag);
-                            return (
-                              <span
-                                key={tag}
-                                className="inline-flex rounded-md px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide"
-                                style={{
-                                  background: color.bg,
-                                  color: color.text,
-                                  border: `1px solid ${color.border}`,
-                                }}
-                              >
-                                {tag}
-                              </span>
-                            );
-                          })
-                        ) : (
-                          <span className="text-[12px] text-slate-600">—</span>
-                        )}
+                        {(() => {
+                          const distinctive = getDistinctiveTags(row.tags);
+                          if (!distinctive.length) {
+                            return <span className="text-[12px] text-slate-600">—</span>;
+                          }
+                          return (
+                            <>
+                              {distinctive.slice(0, 3).map((tag) => {
+                                const color = getTagColor(tag);
+                                return (
+                                  <span
+                                    key={tag}
+                                    className="inline-flex rounded-md px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide"
+                                    style={{
+                                      background: color.bg,
+                                      color: color.text,
+                                      border: `1px solid ${color.border}`,
+                                    }}
+                                  >
+                                    {tag}
+                                  </span>
+                                );
+                              })}
+                              {distinctive.length > 3 && (
+                                <span className="text-[10px] text-slate-500">+{distinctive.length - 3}</span>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
                     </td>
                     <td className="whitespace-nowrap px-5 py-3.5 text-[12px] text-slate-500">

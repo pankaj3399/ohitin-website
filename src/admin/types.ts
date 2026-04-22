@@ -97,19 +97,24 @@ export interface AdminDashboardData {
 /* ── Instagram DM Automation ── */
 
 export interface InstagramMessage {
-  _id: string;
   sender: 'user' | 'assistant';
   text: string;
-  timestamp: string;
+  createdAt: string;
+  delayMs?: number;
+  step?: number;
 }
 
 export interface InstagramConversation {
   _id: string;
-  senderId: string;
+  instagramUserId: string;
+  instagramPageId?: string;
   senderName?: string;
   profileType?: string;
   status: 'ACTIVE' | 'WAITING_FOR_CONTACT' | 'COMPLETED';
   tags: string[];
+  currentFlow?: string;
+  messageStep?: number;
+  classificationSource?: string;
   capturedData?: {
     email?: string;
     phone?: string;
