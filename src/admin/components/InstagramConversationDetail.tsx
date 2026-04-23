@@ -47,7 +47,7 @@ export function InstagramConversationDetail({ conversation, onBack }: Props) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h3 className="truncate text-[14px] font-semibold text-white">
-              {conversation.senderName || conversation.senderId}
+              {conversation.senderName || conversation.instagramUserId}
             </h3>
             <span
               className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[10px] font-medium"
@@ -72,8 +72,8 @@ export function InstagramConversationDetail({ conversation, onBack }: Props) {
         <div className="flex items-center gap-2 rounded-lg p-2.5" style={{ background: 'rgba(255,255,255,0.02)' }}>
           <User size={13} className="text-slate-500" />
           <div>
-            <p className="text-[10px] text-slate-600">Sender ID</p>
-            <p className="text-[12px] font-medium text-slate-300 font-mono">{conversation.senderId}</p>
+            <p className="text-[10px] text-slate-600">Instagram User ID</p>
+            <p className="text-[12px] font-medium text-slate-300 font-mono">{conversation.instagramUserId}</p>
           </div>
         </div>
 
@@ -134,11 +134,11 @@ export function InstagramConversationDetail({ conversation, onBack }: Props) {
         {conversation.messages.length === 0 ? (
           <p className="py-8 text-center text-[12px] text-slate-600">No messages yet</p>
         ) : (
-          conversation.messages.map((msg) => {
+          conversation.messages.map((msg, i) => {
             const isUser = msg.sender === 'user';
             return (
               <div
-                key={msg._id}
+                key={`${msg.createdAt}-${i}`}
                 className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
               >
                 <div
@@ -163,7 +163,7 @@ export function InstagramConversationDetail({ conversation, onBack }: Props) {
                     className="mt-1 text-right text-[10px]"
                     style={{ color: isUser ? 'rgba(255,255,255,0.6)' : 'rgba(148,163,184,0.6)' }}
                   >
-                    {formatDate(msg.timestamp)}
+                    {formatDate(msg.createdAt)}
                   </p>
                 </div>
               </div>

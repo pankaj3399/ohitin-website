@@ -8,6 +8,7 @@ import { useAdminAuth } from '../auth/AuthContext';
 import { DashboardLayout } from '../components/DashboardLayout';
 import type { InstagramConversationListResponse, InstagramFilters } from '../types';
 import { downloadBlob, formatDate } from '../utils/format';
+import { defaultTagColor, getDistinctiveTags, tagColorMap } from '../utils/tags';
 import {
   AlertCircle,
   ChevronLeft,
@@ -136,7 +137,7 @@ export default function InstagramLeadsPage() {
             <div className="flex items-center gap-2 self-start lg:self-auto">
               <button
                 className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-medium text-white transition-all duration-200 hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-                style={{ background: 'linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)' }}
+                style={{ background: 'linear-gradient(135deg, #3B82F6 0%, #6366F1 100%)' }}
                 type="button"
                 onClick={() => void handleExport()}
                 disabled={isExporting}
@@ -173,7 +174,7 @@ export default function InstagramLeadsPage() {
                 className="rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all duration-200"
                 style={
                   filters.tag === opt.value
-                    ? { background: 'linear-gradient(135deg, rgba(236,72,153,0.15), rgba(139,92,246,0.15))', color: '#F472B6', border: '1px solid rgba(236,72,153,0.2)' }
+                    ? { background: 'linear-gradient(135deg, rgba(59,130,246,0.15), rgba(99,102,241,0.15))', color: '#93C5FD', border: '1px solid rgba(59,130,246,0.2)' }
                     : { color: '#94A3B8', border: '1px solid rgba(255,255,255,0.06)' }
                 }
                 onClick={() => handleFilterChange('tag', opt.value)}
@@ -254,7 +255,8 @@ export default function InstagramLeadsPage() {
                       onMouseLeave={(e) => { e.currentTarget.style.background = index % 2 === 1 ? 'rgba(255,255,255,0.01)' : 'transparent'; }}
                     >
                       <td className="px-5 py-3.5">
-                        <p className="text-[12px] font-medium text-slate-300">{row.senderName || row.senderId}</p>
+                        <p className="text-[12px] font-medium text-slate-300">{row.senderName || row.instagramUserId}</p>
+                        <p className="text-[10px] font-mono text-slate-600">IG: {row.instagramUserId}</p>
                       </td>
                       <td className="px-5 py-3.5">
                         <span className="text-[12px] capitalize text-slate-400">{row.profileType || '—'}</span>
@@ -277,20 +279,32 @@ export default function InstagramLeadsPage() {
                         )}
                       </td>
                       <td className="px-5 py-3.5">
-                        <div className="flex flex-wrap gap-1">
-                          {row.tags.filter((t) => ['EMAIL_RECEIVED', 'PHONE_RECEIVED'].includes(t)).map((tag) => (
-                            <span
-                              key={tag}
-                              className="inline-flex rounded-md px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide"
-                              style={
-                                tag === 'EMAIL_RECEIVED'
-                                  ? { background: 'rgba(16,185,129,0.12)', color: '#6EE7B7', border: '1px solid rgba(16,185,129,0.2)' }
-                                  : { background: 'rgba(245,158,11,0.12)', color: '#FCD34D', border: '1px solid rgba(245,158,11,0.2)' }
-                              }
-                            >
-                              {tag.replace(/_/g, ' ')}
-                            </span>
-                          ))}
+                        <div className="flex max-w-[160px] flex-wrap gap-1">
+                          {(() => {
+                            const distinctive = getDistinctiveTags(row.tags);
+                            if (!distinctive.length) {
+                              return <span className="text-[12px] text-slate-600">—</span>;
+                            }
+                            return (
+                              <>
+                                {distinctive.slice(0, 3).map((tag) => {
+                                  const tc = tagColorMap[tag.toUpperCase()] || defaultTagColor;
+                                  return (
+                                    <span
+                                      key={tag}
+                                      className="inline-flex rounded-md px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide"
+                                      style={{ background: tc.bg, color: tc.text, border: `1px solid ${tc.border}` }}
+                                    >
+                                      {tag}
+                                    </span>
+                                  );
+                                })}
+                                {distinctive.length > 3 && (
+                                  <span className="text-[10px] text-slate-500">+{distinctive.length - 3}</span>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-5 py-3.5 text-[12px] text-slate-500">
@@ -331,7 +345,7 @@ export default function InstagramLeadsPage() {
                     className="inline-flex h-8 min-w-[32px] items-center justify-center rounded-lg text-[12px] font-medium transition-all duration-200"
                     style={
                       page === list.pagination.page
-                        ? { background: 'linear-gradient(135deg, #EC4899, #8B5CF6)', color: 'white' }
+                        ? { background: 'linear-gradient(135deg, #3B82F6, #6366F1)', color: 'white' }
                         : { color: '#94A3B8' }
                     }
                     type="button"

@@ -17,6 +17,7 @@ import type {
   InstagramOverviewMetrics,
 } from '../types';
 import { downloadBlob, formatDate, formatNumber } from '../utils/format';
+import { defaultTagColor, getDistinctiveTags, tagColorMap } from '../utils/tags';
 import {
   AlertCircle,
   ChevronLeft,
@@ -62,18 +63,6 @@ const statusColorMap: Record<string, { bg: string; text: string; dot: string }> 
   COMPLETED: { bg: 'rgba(16,185,129,0.1)', text: '#34D399', dot: '#10B981' },
 };
 
-const tagColorMap: Record<string, { bg: string; text: string; border: string }> = {
-  INVESTOR: { bg: 'rgba(139,92,246,0.12)', text: '#C4B5FD', border: 'rgba(139,92,246,0.2)' },
-  CREATIVE: { bg: 'rgba(59,130,246,0.12)', text: '#93C5FD', border: 'rgba(59,130,246,0.2)' },
-  GENERAL: { bg: 'rgba(100,116,139,0.12)', text: '#94A3B8', border: 'rgba(100,116,139,0.2)' },
-  VIP: { bg: 'rgba(245,158,11,0.12)', text: '#FCD34D', border: 'rgba(245,158,11,0.2)' },
-  TALENT: { bg: 'rgba(236,72,153,0.12)', text: '#F9A8D4', border: 'rgba(236,72,153,0.2)' },
-  BRAND: { bg: 'rgba(16,185,129,0.12)', text: '#6EE7B7', border: 'rgba(16,185,129,0.2)' },
-  EMAIL_RECEIVED: { bg: 'rgba(16,185,129,0.12)', text: '#6EE7B7', border: 'rgba(16,185,129,0.2)' },
-  PHONE_RECEIVED: { bg: 'rgba(245,158,11,0.12)', text: '#FCD34D', border: 'rgba(245,158,11,0.2)' },
-};
-
-const defaultTagColor = { bg: 'rgba(100,116,139,0.1)', text: '#94A3B8', border: 'rgba(100,116,139,0.15)' };
 const defaultStatusColor = { bg: 'rgba(100,116,139,0.1)', text: '#94A3B8', dot: '#64748B' };
 
 const overviewCards = [
@@ -370,7 +359,7 @@ export default function InstagramConversationsPage() {
               <button
                 type="button"
                 onClick={() => setIsFiltersOpen(true)}
-                className="relative inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12px] font-medium text-slate-400 transition-all duration-200 hover:border-pink-500/20 hover:bg-pink-500/5 hover:text-pink-400"
+                className="relative inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12px] font-medium text-slate-400 transition-all duration-200 hover:border-blue-500/20 hover:bg-blue-500/5 hover:text-blue-400"
                 style={{ borderColor: 'rgba(255,255,255,0.08)' }}
               >
                 <SlidersHorizontal size={13} />
@@ -378,7 +367,7 @@ export default function InstagramConversationsPage() {
                 {activeFilterCount > 0 && (
                   <span
                     className="flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold text-white"
-                    style={{ background: 'linear-gradient(135deg, #EC4899, #8B5CF6)' }}
+                    style={{ background: 'linear-gradient(135deg, #3B82F6, #6366F1)' }}
                   >
                     {activeFilterCount}
                   </span>
@@ -426,13 +415,13 @@ export default function InstagramConversationsPage() {
                         className="group cursor-pointer transition-colors duration-150"
                         style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: index % 2 === 1 ? 'rgba(255,255,255,0.01)' : 'transparent' }}
                         onClick={() => void openConversation(row._id)}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(236,72,153,0.03)'; }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = index % 2 === 1 ? 'rgba(255,255,255,0.01)' : 'transparent'; }}
                       >
                         <td className="px-5 py-3.5">
                           <div>
-                            <p className="text-[12px] font-medium text-slate-300">{row.senderName || row.senderId}</p>
-                            {row.senderName && <p className="text-[10px] font-mono text-slate-600">{row.senderId.slice(0, 12)}...</p>}
+                            <p className="text-[12px] font-medium text-slate-300">{row.senderName || row.instagramUserId}</p>
+                            <p className="text-[10px] font-mono text-slate-600">IG: {row.instagramUserId}</p>
                           </div>
                         </td>
                         <td className="px-5 py-3.5">
@@ -455,25 +444,31 @@ export default function InstagramConversationsPage() {
                         </td>
                         <td className="px-5 py-3.5">
                           <div className="flex max-w-[160px] flex-wrap gap-1">
-                            {row.tags.length ? (
-                              row.tags.slice(0, 3).map((tag) => {
-                                const tc = tagColorMap[tag.toUpperCase()] || defaultTagColor;
-                                return (
-                                  <span
-                                    key={tag}
-                                    className="inline-flex rounded-md px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide"
-                                    style={{ background: tc.bg, color: tc.text, border: `1px solid ${tc.border}` }}
-                                  >
-                                    {tag}
-                                  </span>
-                                );
-                              })
-                            ) : (
-                              <span className="text-[12px] text-slate-600">—</span>
-                            )}
-                            {row.tags.length > 3 && (
-                              <span className="text-[10px] text-slate-500">+{row.tags.length - 3}</span>
-                            )}
+                            {(() => {
+                              const distinctive = getDistinctiveTags(row.tags);
+                              if (!distinctive.length) {
+                                return <span className="text-[12px] text-slate-600">—</span>;
+                              }
+                              return (
+                                <>
+                                  {distinctive.slice(0, 3).map((tag) => {
+                                    const tc = tagColorMap[tag.toUpperCase()] || defaultTagColor;
+                                    return (
+                                      <span
+                                        key={tag}
+                                        className="inline-flex rounded-md px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide"
+                                        style={{ background: tc.bg, color: tc.text, border: `1px solid ${tc.border}` }}
+                                      >
+                                        {tag}
+                                      </span>
+                                    );
+                                  })}
+                                  {distinctive.length > 3 && (
+                                    <span className="text-[10px] text-slate-500">+{distinctive.length - 3}</span>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </div>
                         </td>
                         <td className="max-w-[180px] truncate px-5 py-3.5 text-[12px] text-slate-500">
@@ -518,7 +513,7 @@ export default function InstagramConversationsPage() {
                     className="inline-flex h-8 min-w-[32px] items-center justify-center rounded-lg text-[12px] font-medium transition-all duration-200"
                     style={
                       page === list.pagination.page
-                        ? { background: 'linear-gradient(135deg, #EC4899, #8B5CF6)', color: 'white' }
+                        ? { background: 'linear-gradient(135deg, #3B82F6, #6366F1)', color: 'white' }
                         : { color: '#94A3B8', border: '1px solid transparent' }
                     }
                     onMouseEnter={(e) => { if (page !== list.pagination.page) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
