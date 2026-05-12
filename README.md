@@ -52,7 +52,7 @@ src
 
 ## Libraries to be used when deemed necessary
 
-- <b>Zustand</b> for state management
+- <b>Zustand</b> for state management.
 - <b>React Query</b> for data fetching
 - <b>Zod</b> for form data validation
 - <b>React Hook Form</b> for form state and plugin zod for validation
