@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { Maximize, Minimize } from 'lucide-react';
+import { Mail, Maximize, Minimize } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Chatbot from './Chatbot';
 
 const FRAMER_CROSSFADE_EASE = [0.42, 0.02, 0.51, 1] as const;
 const FRAMER_CROSSFADE_DURATION = 2;
+const CONTACT_EMAIL = 'Ohitiin@gmail.com';
 
 const baseUrl = import.meta.env.BASE_URL || '/';
 const getAssetUrl = (path: string) => `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
@@ -455,6 +456,30 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
               </motion.div>
             )}
           </AnimatePresence>
+
+          <footer className="relative z-30 mt-8 w-full shrink-0 px-4 pb-28 pt-2 text-center md:fixed md:bottom-6 md:left-6 md:mt-0 md:w-auto md:p-0 md:text-left">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: FRAMER_CROSSFADE_EASE }}
+              className="glass-card mx-auto inline-flex flex-col items-center gap-1.5 rounded-2xl px-6 py-4 shadow-[0_8px_32px_rgba(0,0,0,0.45)] md:mx-0 md:items-start md:rounded-xl md:px-5 md:py-3.5"
+            >
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/50">
+                Contact Us
+              </p>
+              <a
+                href={`mailto:${CONTACT_EMAIL}`}
+                className="group inline-flex items-center gap-2.5 text-[15px] text-white/85 transition-colors hover:text-white md:text-sm"
+              >
+                <span className="flex h-7 w-7 items-center justify-center rounded-full border border-white/15 bg-white/5 transition-colors group-hover:border-white/30 group-hover:bg-white/10">
+                  <Mail size={13} className="text-white/70 transition-colors group-hover:text-white" />
+                </span>
+                <span className="underline decoration-white/25 underline-offset-[5px] transition-all group-hover:decoration-white/60">
+                  {CONTACT_EMAIL}
+                </span>
+              </a>
+            </motion.div>
+          </footer>
         </div>
       )}
 
