@@ -7,6 +7,7 @@ import Chatbot from './Chatbot';
 const FRAMER_CROSSFADE_EASE = [0.42, 0.02, 0.51, 1] as const;
 const FRAMER_CROSSFADE_DURATION = 2;
 const CONTACT_EMAIL = 'Ohitiin@gmail.com';
+const PITCH_DECK_URL = '/a-dream-pitch-deck.pdf';
 
 const baseUrl = import.meta.env.BASE_URL || '/';
 const getAssetUrl = (path: string) => `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
@@ -32,6 +33,23 @@ const getTransitionBuffer = (_videoPath: string): number => {
   // Framer VideoSlideshow uses switchBeforeEnd: 1.5s across scenes.
   return 1.5;
 };
+
+const InstagramGlyph: React.FC = () => (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+    focusable="false"
+    className="text-white/90"
+  >
+    <rect x="3" y="3" width="18" height="18" rx="5.2" stroke="currentColor" strokeWidth="1.8" />
+    <circle cx="12" cy="12" r="4.2" stroke="currentColor" strokeWidth="1.8" />
+    <circle cx="17.2" cy="6.9" r="1.2" fill="currentColor" />
+  </svg>
+);
 
 
 // ─── Lightweight video player component ───────────────────────────────────────
@@ -257,6 +275,8 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
 
   // Memoize scene overlay transition duration
   const sceneTransitionDuration = FRAMER_CROSSFADE_DURATION;
+  const projectPackageLinkClasses =
+    'inline-flex items-center rounded-full border border-white/40 bg-black/35 px-4 py-2 text-[11px] md:text-[12px] font-semibold uppercase tracking-[0.14em] text-white transition-all duration-200 hover:border-white/70 hover:bg-black/55 hover:tracking-[0.16em]';
 
   return (
     <div className={`bg-black text-white font-normal select-none transition-all duration-500 ${isFullscreen ? 'fixed inset-0 z-[100] w-screen h-[100dvh] portrait:w-[100dvh] portrait:h-[100vw] portrait:origin-top-left portrait:translate-x-[100vw] portrait:rotate-90 overflow-hidden block' : 'relative w-full h-[100dvh] md:h-screen overflow-x-hidden md:overflow-hidden flex flex-col md:block'}`}>
@@ -351,6 +371,16 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
                       A DREAM
                     </h1>
                   </div>
+
+                  <a
+                    href={PITCH_DECK_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={projectPackageLinkClasses}
+                    style={{ pointerEvents: 'auto' }}
+                  >
+                    View Project Package
+                  </a>
                 </div>
 
                 {/* Bottom Credits Block */}
@@ -398,6 +428,16 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
                     <br />
                     Further
                   </motion.button>
+
+                  <a
+                    href={PITCH_DECK_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={`${projectPackageLinkClasses} md:absolute md:right-0`}
+                    style={{ pointerEvents: 'auto' }}
+                  >
+                    View Project Package
+                  </a>
                 </div>
 
                 {/* Bottom Story Block */}
@@ -430,18 +470,22 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
                     className="text-base md:text-[18px] font-bold cursor-pointer text-center md:text-center leading-tight hover:text-white/80 transition-colors"
                     style={{ pointerEvents: 'auto' }}
                   >
-                    You Can Also Follow The
-                    <br />
-                    Journey On Instagram
+                    If This Story Resonates With You, Follow Us{' '}
+                    <span className="inline-flex align-middle mx-1">
+                      <InstagramGlyph />
+                    </span>{' '}
+                    As A DREAM Moves Toward The Screen.
                   </a>
 
-                  <div className="text-base md:text-[18px] font-normal text-center leading-tight">
-                    If This Story Resonates With YOU,
-                    <br />
-                    Join Us As A DREAM
-                    <br />
-                    Moves Toward The Screen.
-                  </div>
+                  <a
+                    href={PITCH_DECK_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={projectPackageLinkClasses}
+                    style={{ pointerEvents: 'auto' }}
+                  >
+                    View Project Package
+                  </a>
                 </div>
 
                 {/* Bottom Story Block */}
