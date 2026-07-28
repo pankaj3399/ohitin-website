@@ -35,20 +35,14 @@ const getTransitionBuffer = (_videoPath: string): number => {
 };
 
 const InstagramGlyph: React.FC = () => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    aria-hidden="true"
-    focusable="false"
-    className="text-white/90"
-  >
-    <rect x="3" y="3" width="18" height="18" rx="5.2" stroke="currentColor" strokeWidth="1.8" />
-    <circle cx="12" cy="12" r="4.2" stroke="currentColor" strokeWidth="1.8" />
-    <circle cx="17.2" cy="6.9" r="1.2" fill="currentColor" />
-  </svg>
+  <img
+    src="/instagram-logo.svg"
+    alt="Instagram"
+    width={22}
+    height={22}
+    className="h-[22px] w-[22px] object-contain"
+    loading="lazy"
+  />
 );
 
 
@@ -470,11 +464,12 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
                     className="text-base md:text-[18px] font-bold cursor-pointer text-center md:text-center leading-tight hover:text-white/80 transition-colors"
                     style={{ pointerEvents: 'auto' }}
                   >
-                    If This Story Resonates With You, Follow Us{' '}
-                    <span className="inline-flex align-middle mx-1">
+                    If this story resonates with you, follow us{' '}
+                    <span className="inline-flex align-middle mx-1.5">
                       <InstagramGlyph />
                     </span>{' '}
-                    As A DREAM Moves Toward The Screen.
+                    <br />
+                    as A DREAM moves toward the screen.
                   </a>
 
                   <a
