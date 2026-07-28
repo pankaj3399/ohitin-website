@@ -36,7 +36,7 @@ const getTransitionBuffer = (_videoPath: string): number => {
 
 const InstagramGlyph: React.FC = () => (
   <img
-    src="/instagram-logo.png"
+    src="/instagram-logo.svg"
     alt="Instagram"
     width={22}
     height={22}
