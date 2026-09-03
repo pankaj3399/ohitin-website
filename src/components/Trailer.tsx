@@ -458,7 +458,7 @@ const CinematicTrailer: React.FC<CinematicTrailerProps> = ({ scene = 1 }) => {
                 {/* Top Navigation */}
                 <div className="flex flex-col md:flex-row justify-between items-center md:items-start w-full relative gap-3 md:gap-0">
                   <a
-                    href="https://instagram.com"
+                    href="https://www.instagram.com/adreamfilm"
                     target="_blank"
                     rel="noreferrer"
                     className="text-base md:text-[18px] font-bold cursor-pointer text-center md:text-center leading-tight hover:text-white/80 transition-colors"
